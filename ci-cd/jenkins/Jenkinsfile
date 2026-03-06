@@ -1,0 +1,8 @@
+pipeline {
+agent any
+stages {
+stage('Checkout') { steps { checkout scm } }
+stage('Build') { steps {sh 'docker build -t sample-microservice ./applications/sample-microservice' } }
+stage('Deploy') { steps {sh 'echo "Deploying. . ."' } }
+}
+}
