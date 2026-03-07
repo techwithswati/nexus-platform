@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sample-microservice
+  labels:
+    app: sample-microservice
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: sample-microservice
+  template:
+    metadata:
+      labels:
+        app: sample-microservice
+    spec:
+      containers:
+      - name: sample-microservice
+        image: sample-microservice:v6
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+        env:
+        - name: ENVIRONMENT
+          value: "kubernetes"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sample-microservice
+spec:
+  selector:
+    app: sample-microservice
+  ports:
+  - port: 80
+    targetPort: 8080
+  type: LoadBalancer
