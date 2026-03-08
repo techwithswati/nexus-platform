@@ -30,11 +30,10 @@ jobs:
         pip install -r requirements.txt
 
 
-    - name: Run tests (placeholder)
+    - name: Run tests with pytest
       run: |
         cd applications/sample-microservice
-        echo "No tests yet - add them in tests/ folder"
-        # Later you can run: pytest tests/
+        pytest tests/ -v
 
 
     - name: Build Docker image
