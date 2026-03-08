@@ -33,7 +33,7 @@ jobs:
     - name: Run tests with pytest
       run: |
         cd applications/sample-microservice
-        pytest tests/ -v
+        python -m pytest tests/ -v
 
 
     - name: Build Docker image
