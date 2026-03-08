@@ -57,3 +57,16 @@ jobs:
         docker tag sample-microservice:${{ github.sha }} ${{ secrets.DOCKER_USERNAME }}/sample-microservice:latest
         docker push ${{ secrets.DOCKER_USERNAME }}/sample-microservice:latest
 
+  deploy:
+    needs: test-and-build
+    runs-on: self-hosted
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+
+    - name: Update Kubernetes deployment
+      run: |
+        kubectl set image deployment/sample-microservice sample-microservice=${{ secrets.DOCKER_USERNAME }}/sample-microservice:latest
+        kubectl rollout status deployment/sample-microservice
