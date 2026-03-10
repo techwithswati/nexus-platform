@@ -1,7 +1,7 @@
 FROM python:3.12-slim
 
 # Install dependencies
-RUN pip install --no-cache-dir flask==2.3.3 gunicorn==21.2.0 setuptools
+RUN pip install --no-cache-dir flask==2.3.3 gunicorn==21.2.0 prometheus-flask-exporter==0.23.0
 
 # Create non-root user
 RUN groupadd -r appuser && useradd -r -g appuser appuser

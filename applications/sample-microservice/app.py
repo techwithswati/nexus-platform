@@ -1,11 +1,16 @@
 from flask import Flask, jsonify
+from prometheus_flask_exporter import PrometheusMetrics
 import os
 import random
 import time
 
 app = Flask(__name__)
 
-# Simulated metrics
+# Initialize Prometheus metrics
+metrics = PrometheusMetrics(app)
+metrics.info('app_info', 'Application info', version='1.0.0')
+
+# Simulated metrics (custom ones can be added via the metrics decorator)
 request_count = 0
 start_time = time.time()
 

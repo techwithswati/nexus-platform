@@ -1,0 +1,18 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: sample-microservice
+  namespace: monitoring
+  labels:
+    release: prometheus
+spec:
+  selector:
+    matchLabels:
+      app: example-microservice
+  podMetricsEndpoints:
+  - port: "http"   # must match containerPort
+    path: /metrics
+    interval: 15s
+  namespaceSelector:
+    matchNames:
+    - default
