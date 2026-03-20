@@ -21,8 +21,8 @@ def test_health_route(client):
     data = response.get_json()
     assert data['status'] == "healthy"
 
-def test_metrics_route(client):
-    response = client.get('/metrics')
+def test_json_metrics_route(client):
+    response = client.get('/api/metrics')
     assert response.status_code == 200
     data = response.get_json()
     assert 'requests_total' in data

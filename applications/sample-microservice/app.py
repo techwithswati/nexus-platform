@@ -6,11 +6,11 @@ import time
 
 app = Flask(__name__)
 
-# Initialize Prometheus metrics
+# Initialize Prometheus metrics (this creates the /metrics endpoint)
 metrics = PrometheusMetrics(app)
 metrics.info('app_info', 'Application info', version='1.0.0')
 
-# Simulated metrics (custom ones can be added via the metrics decorator)
+# Simulated metrics for JSON endpoint
 request_count = 0
 start_time = time.time()
 
@@ -30,8 +30,9 @@ def home():
 def health():
     return jsonify({"status": "healthy"}), 200
 
-@app.route('/metrics')
-def metrics():
+# JSON metrics endpoint (used for testing)
+@app.route('/api/metrics')
+def json_metrics():
     uptime = time.time() - start_time
     return jsonify({
         "requests_total": request_count,
