@@ -41,8 +41,8 @@ Enterprise-grade DevOps platform showcasing CI/CD, infrastructure as code, conta
 - **IaC** : Terraform
 - **Container** : Docker
 - **Orchestration** : Kubernetes
-- **CI/CD**: GitLab CI / Jenkins
-- **Monitoring**: Prometheus, Grafana, Loki
+- **CI/CD** : GitLab CI / Jenkins
+- **Monitoring** : Prometheus, Grafana, Loki
 
 ## Getting Started
 
