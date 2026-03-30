@@ -1,8 +1,8 @@
-# Nexus Platform
+## Nexus Platform
 
 Enterprise-grade DevOps platform showcasing CI/CD, infrastructure as code, containerization, Kubernetes, and monitoring.
 
-# Architecture
+## Architecture
 ┌─────────────────────────────────────────────────────────────────────┐
 │                       NEXUS PLATFORM ARCHITECTURE                   │
 ├─────────────────────────────────────────────────────────────────────┤
@@ -35,7 +35,7 @@ Enterprise-grade DevOps platform showcasing CI/CD, infrastructure as code, conta
 │               └───────────┘                                         │
 └─────────────────────────────────────────────────────────────────────┘
 
-# Technologies :
+## Technologies :
 
 - **Cloud** : AWS (EKS, EC2, VPC, S3)
 - **IaC** : Terraform
@@ -45,4 +45,5 @@ Enterprise-grade DevOps platform showcasing CI/CD, infrastructure as code, conta
 - **Monitoring**: Prometheus, Grafana, Loki
 
 ## Getting Started
+
 See [scripts/bootstrap.sh](scripts/bootstrap.sh).
