@@ -1,6 +1,3 @@
-# NetworkPolicies follow a default-deny model:
-# 1. Deny ALL ingress/egress by default
-# 2. Explicitly allow only what's needed
 ---
 # Default deny-all for the nexus namespace
 apiVersion: networking.k8s.io/v1
@@ -28,7 +25,6 @@ spec:
     - Ingress
   ingress:
     - from:
-        # Allow from ingress-nginx namespace
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: ingress-nginx
@@ -37,7 +33,7 @@ spec:
               app.kubernetes.io/name: ingress-nginx
       ports:
         - protocol: TCP
-          port: 5000
+          port: 8080
 ---
 # Allow nexus-app to talk to Prometheus (for scraping)
 apiVersion: networking.k8s.io/v1
@@ -61,7 +57,7 @@ spec:
               app.kubernetes.io/name: prometheus
       ports:
         - protocol: TCP
-          port: 5000
+          port: 8080
 ---
 # Allow nexus-app egress: DNS (required!), and external HTTPS
 apiVersion: networking.k8s.io/v1
@@ -119,4 +115,3 @@ spec:
       ports:
         - protocol: TCP
           port: 3100
----
