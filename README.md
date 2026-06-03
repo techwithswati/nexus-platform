@@ -1,17 +1,49 @@
-# Nexus Platform
+## Nexus Platform
 
 Enterprise-grade DevOps platform showcasing CI/CD, infrastructure as code, containerization, Kubernetes, and monitoring.
 
 ## Architecture
-*(Add architecture diagram later)*
+┌─────────────────────────────────────────────────────────────────────┐
+│                       NEXUS PLATFORM ARCHITECTURE                   │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  GitHub/GitLab          AWS Cloud            Monitoring Stack       │
+│  ┌─────────┐           ┌─────────┐          ┌─────────┐            │
+│  │   Repo  │◄──CI/CD──►│  EKS    │◄──metrics►│Prometheus│           │
+│  └─────────┘   (GitOps)└─────────┘          └─────────┘            │
+│       │           │         │                       │               │
+│       ▼           ▼         ▼                       ▼               │
+│  ┌─────────┐┌─────────┐┌─────────┐          ┌─────────┐            │
+│  │ Terraform││  ArgoCD ││ Service │◄──logs──►│  Loki   │            │
+│  │   Code   ││ (GitOps)││  Mesh   │          └─────────┘            │
+│  └─────────┘└─────────┘└─────────┘                │               │
+│       │           │         │                       │               │
+│       └─────┬─────┴─────────┼───────────────────────┘               │
+│             ▼               ▼                                       │
+│        ┌─────────┐     ┌─────────┐                                 │
+│        │   VPC   │     │  Apps   │◄──►│  Grafana  │                 │
+│        │  (IaC)  │     │(Micro)  │    └───────────┘                 │
+│        └─────────┘     └─────────┘                                 │
+│             │               │                                       │
+│             └───────┬───────┘                                       │
+│                     ▼                                               │
+│               ┌───────────┐                                         │
+│               │ Security  │                                         │
+│               │ Scanning  │                                         │
+│               │  (Trivy,  │                                         │
+│               │  Falco)   │                                         │
+│               └───────────┘                                         │
+└─────────────────────────────────────────────────────────────────────┘
 
-## Technologies
-- **Cloud**: AWS (EKS, EC2, VPC, S3)
-- **IaC**: Terraform
-- **Container**: Docker
-- **Orchestration**: Kubernetes
-- **CI/CD**: GitLab CI / Jenkins
-- **Monitoring**: Prometheus, Grafana, Loki
+## Technologies :
+
+- **Cloud** : AWS (EKS, EC2, VPC, S3)
+- **IaC** : Terraform
+- **Container** : Docker
+- **Orchestration** : Kubernetes
+- **CI/CD** : GitLab CI / Jenkins
+- **Monitoring** : Prometheus, Grafana, Loki
 
 ## Getting Started
+
 See [scripts/bootstrap.sh](scripts/bootstrap.sh).
