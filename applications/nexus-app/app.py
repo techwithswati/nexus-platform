@@ -1,0 +1,45 @@
+from flask import Flask, jsonify
+from prometheus_flask_exporter import PrometheusMetrics
+import os
+import random
+import time
+
+app = Flask(__name__)
+
+# Initialize Prometheus metrics (this creates the /metrics endpoint)
+metrics = PrometheusMetrics(app)
+metrics.info('app_info', 'Application info', version='1.0.0')
+
+# Simulated metrics for JSON endpoint
+request_count = 0
+start_time = time.time()
+
+@app.route('/')
+def home():
+    global request_count
+    request_count += 1
+    return jsonify({
+        "service": "Nexus Platform Nexus App",
+        "version": "1.0.0",
+        "status": "healthy",
+        "environment": os.getenv("ENVIRONMENT", "development"),
+        "requests_handled": request_count
+    })
+
+@app.route('/health')
+def health():
+    return jsonify({"status": "healthy"}), 200
+
+# JSON metrics endpoint (used for testing)
+@app.route('/api/metrics')
+def json_metrics():
+    uptime = time.time() - start_time
+    return jsonify({
+        "requests_total": request_count,
+        "uptime_seconds": round(uptime, 2),
+        "error_rate": 0.02,
+        "response_time_ms": random.uniform(100, 200)
+    })
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)  # Changed from 8080

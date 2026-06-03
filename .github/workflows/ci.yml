@@ -66,6 +66,16 @@ jobs:
       uses: actions/checkout@v4
 
 
+    - name: Set up kubeconfig
+      run: |
+        mkdir -p ~/.kube
+        echo "${{ secrets.KUBECONFIG }}" > ~/.kube/    - name: Configure kubectl for Minikube
+      run: |
+        minikube status || minikube start
+        minikube update-context
+        kubectl config use-context minikube
+
+
     - name: Update Kubernetes deployment
       run: |
         kubectl set image deployment/sample-microservice sample-microservice=${{ secrets.DOCKER_USERNAME }}/sample-microservice:latest

@@ -1,0 +1,24 @@
+apiVersion: monitoring.coreos.com/v1
+
+kind: ServiceMonitor
+
+metadata:
+  name: sample-microservice
+  namespace: monitoring
+  labels:
+    app: sample-microservice
+    release: prometheus    # Important: this label matches the prometheus release selector.
+
+spec:
+  selector:
+    matchLabels:
+      app: sample-microservice    # Must match the labels on your Service.
+
+  endpoints:
+  - port: "80"                    # The port name on your Service (or number).
+    path: /metrics                # Your metrics endpoint.
+    interval: 15s
+
+  namespaceSelector:
+    matchNames:
+    - default                     # Your microservice runs in the default namespace. 

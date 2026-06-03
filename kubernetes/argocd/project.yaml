@@ -1,0 +1,18 @@
+# Restrict what ArgoCD can deploy - defence-in-depth
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: nexus
+  namespace: argocd
+spec:
+  description: Nexus Platform project
+
+  sourceRepos:
+    - https://github.com/techwithswati/nexus-platform
+
+  destinations:
+    - namespace: nexus
+      server: https://kubernetes.default.svc
+    - namespace: monitoring
+      server: https://kubernetes
+      

@@ -1,0 +1,122 @@
+# NetworkPolicies follow a default-deny model:
+# 1. Deny ALL ingress/egress by default
+# 2. Explicitly allow only what's needed
+---
+# Default deny-all for the nexus namespace
+apiVersion: networking.k8s.io/v1
+kind: Networkpolicy
+metadata:
+  name: default-deny-all
+  namespace: nexus
+spec:
+  podSelector: {}       # Applies to ALL pods in namespace
+  policyTypes:
+    - Ingress
+    - Egress
+---
+# Allow ingress to nexus-app ONLY from the ingress controller
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ingress-controller
+  namespace: nexus
+spec:
+  podSelector:
+    matchLabels:
+      app: nexus-app
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        # Allow from ingress-nginx namespace
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 5000
+---
+# Allow nexus-app to talk to Prometheus (for scraping)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-prometheus-scrape
+  namespace: nexus
+spec:
+  podSelector:
+    matchLabels:
+      app: nexus-app
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: prometheus
+      ports:
+        - protocol: TCP
+          port: 5000
+---
+# Allow nexus-app egress: DNS (required!), and external HTTPS
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-nexus-app-egress
+  namespace: nexus
+spec:
+  podSelector:
+    matchLabels:
+      app: nexus-app
+  policyTypes:
+    - Egress
+  egress:
+    # DNS - without this, pods can't resolve any hostnames
+    - ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # External HTTPS (ECR image pulls, external APIs)
+    - ports:
+        - protocol: TCP
+          port: 443
+    # Internal cluster services (kube-apiserver)
+    - ports:
+        - protocol: TCP
+          port: 443
+      to:
+        - ipBlock:
+            cidr: 10.0.0.0/8   # Your VPC CIDR
+---
+# Allow monitoring namespace to talk to Loki
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-loki-ingress
+  namespace: monitoring
+spec:
+  podSelector:
+    matchLabels:
+      app: loki
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        # Promtail (same namespace)
+        - podSelector:
+            matchLabels:
+              app: promtail
+        # nexus namespace pods pushing logs
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: nexus
+      ports:
+        - protocol: TCP
+          port: 3100
+---

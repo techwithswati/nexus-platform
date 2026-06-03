@@ -1,0 +1,50 @@
+# The ArgoCD Application - this is what makes it GitOps.
+# Any push to main → ArgoCD detects drift → auto-syncs to cluster.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: nexus-platform
+  namespace: argocd
+  # ArgoCD will delete child resources when this Application is deleted
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  labels:
+    app.kubernetes.io/name: nexus-platform
+    team: platform
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/techwithswati/nexus-platform
+    targetRevision: HEAD
+    path: kubernetes        # Syncs everything in /kubernetes directory
+    
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: nexus
+
+  syncPolicy:
+    automated:
+      prune: true       # Delete resources removed form Git
+      selfHeal: true    # Revert manual kubectl edits (drift correction)
+      allowEmpty: false
+
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+      - ApplyOutOfSyncOnly=true   # Only sync what's changed
+
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+  # Health check overrides
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas    # Ignore replica count - HPA manages this
