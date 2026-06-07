@@ -34,13 +34,13 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cd applications
+          cd applications/nexus-app
           pip install -r requirements.txt
           pip install pytest
 
       - name: Run tests
         run: |
-          cd applications
+          cd applications/nexus-app
           pytest tests/ -v --tb=short || true
 
   # ──────────────────────────────────────────────
