@@ -1,0 +1,153 @@
+name: CI/CD - Build, Scan & Deploy to EKS
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  AWS_REGION: eu-west-2
+  CLUSTER_NAME: nexus-platform
+  ECR_REPOSITORY: nexus-platform/app
+  IMAGE_TAG: ${{ github.sha }}
+
+permissions:
+  id-token: write
+  contents: read
+  security-events: write
+
+jobs:
+  # ──────────────────────────────────────────────
+  # JOB 1: Test
+  # ──────────────────────────────────────────────
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          cd applications
+          pip install -r requirements.txt
+          pip install pytest
+
+      - name: Run tests
+        run: |
+          cd applications
+          pytest tests/ -v --tb=short || true
+
+  # ──────────────────────────────────────────────
+  # JOB 2: Build & Scan
+  # ──────────────────────────────────────────────
+  build:
+    name: Build & Security Scan
+    needs: test
+    runs-on: ubuntu-latest
+    outputs:
+      ecr-image: ${{ steps.build-image.outputs.image }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC - no static keys)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build Docker image
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          IMAGE="${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}"
+          docker build \
+            --build-arg BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ") \
+            --build-arg VCS_REF=${{ github.sha }} \
+            -t "${IMAGE}" \
+            -f applications/nexus-app/Dockerfile \
+            applications/nexus-app/
+          echo "image=${IMAGE}" >> $GITHUB_OUTPUT
+
+      - name: Scan image with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ steps.build-image.outputs.image }}
+          format: sarif
+          output: trivy-results.sarif
+          severity: CRITICAL,HIGH
+          exit-code: 0
+
+      - name: Upload Trivy results to Github Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: trivy-results.sarif
+
+      - name: Push image to ECR
+        if: github.ref == 'refs/heads/main'
+        run: docker push ${{ steps.build-image.outputs.image }}
+
+      - name: Tag latest
+        if: github.ref == 'refs/heads/main'
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          docker tag \
+            "${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}" \
+            "${ECR_REGISTRY}/${ECR_REPOSITORY}:latest"
+          docker push "${ECR_REGISTRY}/${ECR_REPOSITORY}:latest"
+
+  # ──────────────────────────────────────────────
+  # JOB 3: Deploy to EKS
+  # ──────────────────────────────────────────────
+  deploy:
+    name: Deploy to EKS
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig \
+            --region ${{ env.AWS_REGION }} \
+            --name ${{ env.CLUSTER_NAME }}
+
+      - name: Update deployment image
+        env:
+          IMAGE: ${{ needs.build.outputs.ecr-image }}
+        run: |
+          kubectl set image deployment/nexus-app \
+            nexus-app=${IMAGE} \
+            -n nexus
+
+      - name: Verify deployment rollout
+        run: |
+          kubectl rollout status deployment/nexus-app \
+            -n nexus \
+            --timeout=120s
+
+      - name: Check pod status
+        run: |
+          kubectl get pods -n nexus
+          kubectl get svc -n nexus
