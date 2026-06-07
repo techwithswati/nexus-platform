@@ -14,5 +14,19 @@ spec:
     - namespace: nexus
       server: https://kubernetes.default.svc
     - namespace: monitoring
-      server: https://kubernetes
+      server: https://kubernetes.default.svc
+
+  # Only allow safe resource types
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace 
+
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"
+
+  # Block dangerous resources
+  namespaceResourceBlacklist:
+    - group: ""
+      kind: ResourceQuota   # Managed separately by platform team
       

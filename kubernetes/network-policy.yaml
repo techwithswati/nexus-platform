@@ -1,7 +1,7 @@
 ---
 # Default deny-all for the nexus namespace
 apiVersion: networking.k8s.io/v1
-kind: Networkpolicy
+kind: NetworkPolicy
 metadata:
   name: default-deny-all
   namespace: nexus

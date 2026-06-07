@@ -65,6 +65,6 @@ promtail:
           - source_labels: [__meta_kubernetes_pod_label_app]
             target_label: app
 
-# Disable built-in Grafana - you alraedy have one from kube-prometheus-stack
+# Disable built-in Grafana - you already have one from kube-prometheus-stack
 grafana:
   enabled: false

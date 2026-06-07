@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Run once to bootstrap ArgoCd on your EKS cluster
+# Run once to bootstrap ArgoCD on your EKS cluster
 set -euo pipefail
 
 ARGOCD_VERSION="v2.10.4"
